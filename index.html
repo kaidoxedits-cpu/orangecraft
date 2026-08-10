@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>OrangeCraft - Video Editing Marketplace</title>
+  <style>
+    :root {
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --dark: #0f172a;
+      --light: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #334155;
+      --text-muted: #64748b;
+      --discord: #5865F2;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      --transition: all 0.25s ease-in-out;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    html, body { width: 100%; overflow-x: hidden; background-color: var(--light); color: var(--text); line-height: 1.5; }
+
+    /* Responsive Navigation Header */
+    nav {
+      position: sticky; top: 0; background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+      z-index: 1000; padding: 0.8rem 4%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem;
+    }
+
+    .logo { font-size: clamp(1.2rem, 4vw, 1.6rem); font-weight: 800; color: var(--dark); cursor: pointer; }
+    .logo span { color: var(--primary); }
+
+    .nav-links { display: flex; gap: 1rem; list-style: none; align-items: center; flex-wrap: wrap; }
+    .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; font-size: clamp(0.85rem, 2.5vw, 0.95rem); cursor: pointer; transition: var(--transition); }
+    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+
+    .btn { padding: 0.55rem 1.1rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; transition: var(--transition); white-space: nowrap; }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+
+    /* Fully Adaptive Page Container */
+    .page-view { display: none; padding: clamp(1rem, 3vw, 2.5rem) 4%; max-width: 1300px; margin: 0 auto; }
+    .page-view.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+    /* Flexible Grid System for Mobile, Tablet, PC & Laptop */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(260px, 100%, 360px), 1fr)); gap: 1.5rem; margin-top: 1.2rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem; box-shadow: var(--shadow); width: 100%; }
+
+    .profile-img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; margin-bottom: 0.8rem; }
+    .badge-verified { background: #f3e8ff; color: #6b21a8; padding: 0.2rem 0.55rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+    .badge-discord { background: #e0e7ff; color: var(--discord); padding: 0.2rem 0.55rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; margin-top: 0.3rem; display: inline-block; }
+
+    /* Form Fields */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 600; font-size: 0.88rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.92rem; background: var(--surface);
+    }
+
+    /* Drag & Drop Upload Containers */
+    .drop-box {
+      border: 2px dashed var(--primary); border-radius: 10px; padding: 1.2rem;
+      text-align: center; background: #f5f3ff; cursor: pointer; transition: var(--transition); margin-bottom: 0.5rem;
+    }
+    .drop-box:hover { background: #ede9fe; }
+
+    /* Portfolio Work Showcase Grid */
+    .work-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; }
+    .work-thumb { width: 100%; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+
+    /* Adaptive Modal Component */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; pointer-events: none; transition: var(--transition); padding: 1rem; }
+    .modal.active { opacity: 1; pointer-events: auto; }
+    .modal-content { background: var(--surface); padding: 1.5rem; border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
+
+    /* Two-Column Responsive Layouts */
+    .layout-split { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+    @media (max-width: 850px) {
+      .layout-split { grid-template-columns: 1fr; }
+      nav { justify-content: center; }
+      .nav-links { justify-content: center; }
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <!-- Responsive Navigation Header -->
+  <nav>
+    <div class="logo" onclick="showPage('homePage')">Editors<span>Craft</span></div>
+    <ul class="nav-links">
+      <li><a id="navHome" class="active" onclick="showPage('homePage')">Explore Editors</a></li>
+      <li><a id="navBooking" onclick="showPage('bookingPage')">Find App Specialists</a></li>
+      <li><a id="navProfile" onclick="showPage('profilePage')">My Account Profile</a></li>
+      <li><a id="navCustomer" onclick="showPage('customerDashboardPage')">Client Projects</a></li>
+      <li><a id="navSeller" onclick="showPage('sellerCentralPage')">Editor Studio</a></li>
+      <li><button class="btn btn-primary" id="loginNavBtn" onclick="handleNavAuthClick()">Sign In</button></li>
+    </ul>
+  </nav>
+
+  <!-- PAGE 1: EXPLORE MARKETPLACE -->
+  <section class="page-view active" id="homePage">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h1 style="font-size: clamp(1.8rem, 5vw, 2.5rem); color: var(--dark);">Hire Top Video Editors By Software & Style</h1>
+      <p style="color: var(--text-muted); font-size: clamp(0.9rem, 2.5vw, 1.1rem); margin-top: 0.5rem;">Find 2FA SMS & Email Verified Editors with Discord contacts & portfolios.</p>
+    </div>
+    <h2>Featured Editors</h2>
+    <div class="grid" id="homeWorkerGrid"></div>
+  </section>
+
+  <!-- PAGE 2: FIND APP SPECIALISTS & EDITING STYLES -->
+  <section class="page-view" id="bookingPage">
+    <h2>Filter Editors By Software & Specialty</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Search by editing software or specific editing styles.</p>
+
+    <div class="layout-split">
+      <div class="card" style="height: fit-content;">
+        <h3>1. Search Filters</h3>
+        <br>
+        <div class="form-group">
+          <label>🔍 Search Software / App</label>
+          <input type="text" id="citySearchBox" placeholder="Type app (After Effects, CapCut)..." onkeyup="searchAndFilterCities()">
+        </div>
+        <div class="form-group">
+          <label>Select Editing App</label>
+          <select id="bookingCityFilter" onchange="filterWorkersForBooking()" class="editing-app-select"></select>
+        </div>
+        <div class="form-group">
+          <label>Select Editing Style</label>
+          <select id="bookingStyleFilter" onchange="filterWorkersForBooking()">
+            <option value="All">All Editing Styles</option>
+            <option value="Movie Editing">Movie Editing</option>
+            <option value="Anime Editing (AMV)">Anime Editing (AMV)</option>
+            <option value="Personal Edit">Personal Edit</option>
+            <option value="Long-form YT Video">Long-form YT Video</option>
+            <option value="Ad / Promotional Editing">Ad / Promotional Editing</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <h3>2. Matched Editors</h3>
+        <div id="bookingWorkerList" class="grid" style="grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE 3: USER PROFILE WEBPAGE -->
+  <section class="page-view" id="profilePage">
+    <h2>Account Profile Webpage</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">View your contact details, Discord handle, and 2FA verification badges.</p>
+
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 1.5rem;">
+        <img id="pPic" src="https://via.placeholder.com/120" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary);">
+        <h3 id="pName" style="margin-top: 0.5rem;">-</h3>
+        <span class="badge-verified" id="pVerifiedBadge">✓ SMS & Email 2FA Verified</span>
+      </div>
+      <p><strong>Account Role:</strong> <span id="pRole">-</span></p>
+      <p><strong>Email Address:</strong> <span id="pEmail">-</span></p>
+      <p><strong>Mobile Phone:</strong> <span id="pPhone">-</span></p>
+      <p><strong>Discord Contact:</strong> <span id="pDiscord" style="color: var(--discord); font-weight: bold;">-</span></p>
+      <p><strong>Primary Editing App:</strong> <span id="pCity" style="font-weight: bold; color: var(--primary);">-</span></p>
+      <p><strong>Bio / Portfolio Note:</strong> <span id="pAddress">-</span></p>
+    </div>
+  </section>
+
+  <!-- PAGE 4: CLIENT ORDERS DASHBOARD -->
+  <section class="page-view" id="customerDashboardPage">
+    <h2>Client Projects Dashboard</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Track hired editors, Discord contact details, and project status.</p>
+    <div id="customerOrdersContainer"></div>
+  </section>
+
+  <!-- PAGE 5: EDITOR STUDIO (SELLER PORTAL) -->
+  <section class="page-view" id="sellerCentralPage">
+    <h2>Editor Studio Portal</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Manage your portfolio work, client gig requests, and editing rates.</p>
+
+    <div class="layout-split">
+      <div class="card">
+        <h3>Editor Business Profile</h3>
+        <br>
+        <img id="scPic" class="profile-img" src="" alt="Profile Pic">
+        <p><strong>Name:</strong> <span id="scName">-</span></p>
+        <p><strong>Editing Specialty:</strong> <span id="scCategory" style="color: var(--primary); font-weight: bold;">-</span></p>
+        <p><strong>Rate per Project:</strong> $<span id="scRate">-</span></p>
+        <p><strong>Primary Software:</strong> <span id="scCity">-</span></p>
+        <p><strong>Discord:</strong> <span id="scDiscord" style="color: var(--discord); font-weight: bold;">-</span></p>
+      </div>
+
+      <div class="card">
+        <h3>Incoming Client Orders</h3>
+        <br>
+        <div id="scOrders"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL 1: LOGIN -->
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <h2>Sign In to EditorsCraft</h2>
+      <br>
+      <form onsubmit="handleLogin(event)">
+        <div class="form-group"><label>Email Address</label><input type="email" id="loginEmail" required></div>
+        <div class="form-group"><label>Password</label><input type="password" id="loginPassword" required></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+      </form>
+      <br>
+      <p style="font-size: 0.9rem; text-align: center;">
+        Don't have an account? <a onclick="toggleModal('loginModal'); toggleModal('registerModal');" style="color: var(--primary); cursor: pointer; font-weight: bold;">Register Here</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- MODAL 2: REGISTER -->
+  <div class="modal" id="registerModal">
+    <div class="modal-content">
+      <h2>Create Account</h2>
+      <br>
+      <form onsubmit="handleRegister(event)">
+        <div class="form-group"><label>Full Name</label><input type="text" id="regName" required></div>
+        <div class="form-group"><label>Email Address (for Email OTP)</label><input type="email" id="regEmail" required></div>
+        <div class="form-group"><label>Password</label><input type="password" id="regPassword" required></div>
+        <div class="form-group"><label>Mobile Phone Number (for SMS OTP)</label><input type="tel" id="regPhone" placeholder="10-digit phone number" required></div>
+        <div class="form-group"><label>Discord Username / Tag</label><input type="text" id="regDiscord" placeholder="e.g. EditorName#1234 or editor_user" required></div>
+        
+        <div class="form-group">
+          <label>Account Type</label>
+          <select id="regRole" onchange="toggleListerPicRequirement()">
+            <option value="customer">Client (Hire Editors)</option>
+            <option value="lister">Video Editor (Offer Services)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Primary Editing App / Software</label>
+          <select id="regCity" class="editing-app-select" required></select>
+        </div>
+
+        <div id="listerExtraFields" style="display: none;">
+          <div class="form-group">
+            <label style="color: #b91c1c;">1. Profile Photo (MANDATORY FOR EDITORS)</label>
+            <div id="dropZoneProfile" class="drop-box">
+              <p id="dropZoneProfileText" style="margin: 0; color: var(--primary); font-weight: bold;">📁 Drag & Drop profile photo here</p>
+              <input type="file" id="regProfileFileInput" accept="image/*" style="display: none;">
+              <img id="profilePreview" style="display: none; max-width: 100px; max-height: 100px; border-radius: 50%; margin: 0.5rem auto 0; object-fit: cover;">
+            </div>
+            <input type="hidden" id="regProfilePic">
+          </div>
+
+          <div class="form-group">
+            <label>2. Mandatory Editing Specialty / Style</label>
+            <select id="regStyle" required>
+              <option value="Movie Editing">Movie Editing</option>
+              <option value="Anime Editing (AMV)">Anime Editing (AMV)</option>
+              <option value="Personal Edit">Personal Edit</option>
+              <option value="Long-form YT Video">Long-form YT Video</option>
+              <option value="Ad / Promotional Editing">Ad / Promotional Editing</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>3. Portfolio Showcase Files (Drag & Drop Work Samples)</label>
+            <div id="dropZoneWork" class="drop-box">
+              <p id="dropZoneWorkText" style="margin: 0; color: var(--primary); font-weight: bold;">🎞️ Drag & Drop video thumbnails/work files</p>
+              <input type="file" id="regWorkFileInput" accept="image/*" multiple style="display: none;">
+              <div class="work-preview-grid" id="workSamplesPreview"></div>
+            </div>
+          </div>
+
+          <div class="form-group"><label>Project Rate ($)</label><input type="number" id="regRate" value="30"></div>
+          <div class="form-group"><label>Short Bio / Portfolio Note</label><textarea id="regBio" rows="2" placeholder="Tell clients about your editing experience..."></textarea></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account & Send 2FA</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: COMPULSORY DUAL 2FA OTP VERIFICATION -->
+  <div class="modal" id="otpModal">
+    <div class="modal-content">
+      <h2>🔐 Compulsory 2FA Verification</h2>
+      <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1rem;">
+        Both SMS and Email verification are compulsory before purchasing or listing services. Enter the OTPs logged in your running terminal (`node server.js`).
+      </p>
+      <form onsubmit="handleVerifyDual(event)">
+        <div class="form-group">
+          <label>1. Mobile Phone SMS OTP</label>
+          <input type="text" id="phoneOtpInput" placeholder="6-Digit SMS Code" maxlength="6" required style="font-size: 1.3rem; text-align: center; letter-spacing: 3px;">
+        </div>
+        <div class="form-group">
+          <label>2. Email Verification OTP</label>
+          <input type="text" id="emailOtpInput" placeholder="6-Digit Email Code" maxlength="6" required style="font-size: 1.3rem; text-align: center; letter-spacing: 3px;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Verify & Activate Account</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000/api';
+    let currentUser = JSON.parse(localStorage.getItem('hc_user')) || null;
+    let currentToken = localStorage.getItem('hc_token') || null;
+    let pending2FAUserId = null;
+    let uploadedWorkSamples = [];
+    let allWorkers = [];
+
+    const famousEditingApps = [
+      "After Effects", "Alight Motion", "CapCut", "DaVinci Resolve", "Filmora", 
+      "Final Cut Pro", "InShot", "KineMaster", "Lightworks", "LumaFusion", 
+      "Node Video", "Pinnacle Studio", "Premiere Pro", "Sony Vegas Pro", "VN Video Editor"
+    ];
+
+    function populateCities() {
+      document.querySelectorAll('.editing-app-select').forEach(select => {
+        select.innerHTML = select.id === 'bookingCityFilter' 
+          ? '<option value="">-- All Editing Apps --</option>' 
+          : '<option value="">-- Select Editing Software / App --</option>';
+
+        famousEditingApps.forEach(app => {
+          const opt = document.createElement('option');
+          opt.value = app; opt.textContent = app;
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    function searchAndFilterCities() {
+      const q = document.getElementById('citySearchBox').value.toLowerCase();
+      const sel = document.getElementById('bookingCityFilter');
+      sel.innerHTML = '<option value="">-- All Editing Apps --</option>';
+
+      famousEditingApps.filter(app => app.toLowerCase().includes(q)).forEach(app => {
+        const opt = document.createElement('option');
+        opt.value = app; opt.textContent = app;
+        sel.appendChild(opt);
+      });
+      filterWorkersForBooking();
+    }
+
+    function showPage(id) {
+      document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      
+      document.getElementById(id).classList.add('active');
+
+      if (id === 'profilePage') loadUserProfilePage();
+      if (id === 'customerDashboardPage') loadCustomerDashboard();
+      if (id === 'sellerCentralPage') loadSellerCentral();
+    }
+
+    function toggleModal(id) { document.getElementById(id).classList.toggle('active'); }
+
+    function handleNavAuthClick() {
+      if (currentUser) {
+        localStorage.removeItem('hc_user'); localStorage.removeItem('hc_token');
+        currentUser = null; currentToken = null;
+        updateAuthNav();
+        alert('Signed Out Successfully.');
+        showPage('homePage');
+      } else {
+        toggleModal('loginModal');
+      }
+    }
+
+    function updateAuthNav() {
+      const btn = document.getElementById('loginNavBtn');
+      btn.innerText = currentUser ? `Sign Out (${currentUser.name})` : 'Sign In';
+    }
+
+    function toggleListerPicRequirement() {
+      const role = document.getElementById('regRole').value;
+      document.getElementById('listerExtraFields').style.display = role === 'lister' ? 'block' : 'none';
+    }
+
+    // Drag & Drop Setup for Profile Pic & Portfolio Work Samples
+    function setupDragAndDrop() {
+      // 1. Profile Picture Drag & Drop
+      const dropZoneProfile = document.getElementById('dropZoneProfile');
+      const profileFileInput = document.getElementById('regProfileFileInput');
+      const profilePreview = document.getElementById('profilePreview');
+      const hiddenProfileInput = document.getElementById('regProfilePic');
+
+      dropZoneProfile.addEventListener('click', () => profileFileInput.click());
+      profileFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            hiddenProfileInput.value = evt.target.result;
+            profilePreview.src = evt.target.result;
+            profilePreview.style.display = 'block';
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        }
+      });
+
+      // 2. Portfolio Work Samples Drag & Drop
+      const dropZoneWork = document.getElementById('dropZoneWork');
+      const workFileInput = document.getElementById('regWorkFileInput');
+      const workPreviewContainer = document.getElementById('workSamplesPreview');
+
+      dropZoneWork.addEventListener('click', () => workFileInput.click());
+      workFileInput.addEventListener('change', (e) => {
+        Array.from(e.target.files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            uploadedWorkSamples.push(evt.target.result);
+            const img = document.createElement('img');
+            img.src = evt.target.result;
+            img.className = 'work-thumb';
+            workPreviewContainer.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+
+    async function fetchWorkers() {
+      try {
+        const res = await fetch(`${API}/workers`);
+        allWorkers = await res.json();
+        renderHomeWorkers();
+        filterWorkersForBooking();
+      } catch (err) { console.error('Error:', err); }
+    }
+
+    function renderHomeWorkers() {
+      const grid = document.getElementById('homeWorkerGrid');
+      grid.innerHTML = allWorkers.map(w => {
+        let samples = [];
+        try { samples = JSON.parse(w.work_samples || '[]'); } catch(e){}
+
+        return `
+          <div class="card">
+            <img src="${w.profile_pic}" class="profile-img" alt="${w.name}">
+            <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:0.3rem;">
+              <h3>${w.name}</h3>
+              <span class="badge-verified">✓ 2FA Verified</span>
+            </div>
+            <div class="badge-discord">💬 Discord: ${w.discord}</div>
+            <p style="color:var(--primary); font-weight:700; margin-top:0.4rem;">Specialty: ${w.editing_style}</p>
+            <p style="font-size:0.85rem; color:var(--text-muted);">🎬 Software: <strong>${w.editing_app}</strong></p>
+            
+            ${samples.length > 0 ? `
+              <div style="margin: 0.5rem 0;">
+                <p style="font-size:0.75rem; font-weight:bold; color:var(--text-muted);">PORTFOLIO SAMPLES:</p>
+                <div class="work-preview-grid">
+                  ${samples.slice(0, 3).map(s => `<img src="${s}" class="work-thumb">`).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <div style="font-size:1.2rem; font-weight:bold; margin:0.5rem 0;">$${w.rate} / project</div>
+            <button class="btn btn-primary" style="width:100%;" onclick="bookWorker(${w.lister_user_id}, '${w.editing_style}', ${w.rate})">Hire Editor</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterWorkersForBooking() {
+      const appFilter = document.getElementById('bookingCityFilter').value.toLowerCase();
+      const styleFilter = document.getElementById('bookingStyleFilter').value;
+
+      const filtered = allWorkers.filter(w => {
+        const matchesApp = !appFilter || w.editing_app.toLowerCase() === appFilter;
+        const matchesStyle = styleFilter === 'All' || w.editing_style === styleFilter;
+        return matchesApp && matchesStyle;
+      });
+
+      const list = document.getElementById('bookingWorkerList');
+      if (filtered.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted);">No verified editors match your filter criteria.</p>';
+        return;
+      }
+
+      list.innerHTML = filtered.map(w => `
+        <div class="card" style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+          <img src="${w.profile_pic}" style="width:65px; height:65px; border-radius:10px; object-fit:cover;">
+          <div style="flex:1; min-width: 200px;">
+            <h4>${w.name} <span class="badge-verified">🎬 ${w.editing_app}</span></h4>
+            <p style="font-size:0.85rem; color:var(--primary); font-weight:600;">${w.editing_style}</p>
+            <p style="font-size:0.8rem; color:var(--discord);">Discord: ${w.discord}</p>
+          </div>
+          <button class="btn btn-primary" onclick="bookWorker(${w.lister_user_id}, '${w.editing_style}', ${w.rate})">Hire ($${w.rate})</button>
+        </div>
+      `).join('');
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const role = document.getElementById('regRole').value;
+      const profilePic = document.getElementById('regProfilePic').value;
+
+      if (role === 'lister' && (!profilePic || profilePic.trim() === '')) {
+        alert('❌ Profile photo is mandatory for Editors.');
+        return;
+      }
+
+      const body = {
+        name: document.getElementById('regName').value,
+        email: document.getElementById('regEmail').value,
+        password: document.getElementById('regPassword').value,
+        phone: document.getElementById('regPhone').value,
+        discord: document.getElementById('regDiscord').value,
+        role,
+        editing_app: document.getElementById('regCity').value,
+        editing_style: document.getElementById('regStyle').value,
+        profile_pic: profilePic,
+        work_samples: uploadedWorkSamples,
+        rate: document.getElementById('regRate').value,
+        bio: document.getElementById('regBio') ? document.getElementById('regBio').value : '',
+      };
+
+      try {
+        const res = await fetch(`${API}/auth/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.requiresVerification) {
+          pending2FAUserId = data.userId;
+          toggleModal('registerModal');
+          toggleModal('otpModal');
+        } else {
+          alert(data.error || 'Registration failed.');
+        }
+      } catch (err) {
+        alert('Server error. Check terminal console output.');
+      }
+    }
+
+    async function handleVerifyDual(e) {
+      e.preventDefault();
+      const phoneOtp = document.getElementById('phoneOtpInput').value;
+      const emailOtp = document.getElementById('emailOtpInput').value;
+
+      try {
+        const res = await fetch(`${API}/auth/verify-dual`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: pending2FAUserId, phoneOtp, emailOtp })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          currentUser = data.user; currentToken = data.token;
+          localStorage.setItem('hc_user', JSON.stringify(currentUser));
+          localStorage.setItem('hc_token', currentToken);
+          updateAuthNav();
+          alert('🎉 Both Mobile Phone and Email Verified Successfully!');
+          toggleModal('otpModal');
+          fetchWorkers();
+        } else {
+          alert(data.error || 'Invalid OTP code.');
+        }
+      } catch (err) {
+        alert('Verification error. Check terminal output.');
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value,
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          currentUser = data.user; currentToken = data.token;
+          localStorage.setItem('hc_user', JSON.stringify(currentUser));
+          localStorage.setItem('hc_token', currentToken);
+          updateAuthNav();
+          alert('Signed In Successfully!');
+          toggleModal('loginModal');
+        } else {
+          alert(data.error || 'Login failed.');
+        }
+      } catch (err) {
+        alert('Server connection error.');
+      }
+    }
+
+    async function loadUserProfilePage() {
+      if (!currentUser) return toggleModal('loginModal');
+
+      const res = await fetch(`${API}/user/profile`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      const data = await res.json();
+
+      document.getElementById('pName').innerText = data.user.name;
+      document.getElementById('pRole').innerText = data.user.role.toUpperCase();
+      document.getElementById('pEmail').innerText = data.user.email;
+      document.getElementById('pPhone').innerText = data.user.phone;
+      document.getElementById('pDiscord').innerText = data.user.discord;
+      document.getElementById('pCity').innerText = data.user.editing_app;
+      document.getElementById('pAddress').innerText = data.profile ? data.profile.bio || 'N/A' : 'N/A';
+      document.getElementById('pPic').src = data.profile ? data.profile.profile_pic : 'https://via.placeholder.com/120';
+    }
+
+    async function bookWorker(listerUserId, category, amount) {
+      if (!currentUser) { alert('Please sign in first.'); toggleModal('loginModal'); return; }
+
+      const res = await fetch(`${API}/orders`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentToken}`
+        },
+        body: JSON.stringify({ listerUserId, category, amount, paymentMethod: 'Escrow Hold' })
+      });
+
+      const data = await res.json();
+      if (res.ok) alert('🎉 Video Editing Project Hired Successfully!');
+      else alert(data.error);
+    }
+
+    async function loadCustomerDashboard() {
+      if (!currentUser) return toggleModal('loginModal');
+      const res = await fetch(`${API}/customer/orders`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      const orders = await res.json();
+      document.getElementById('customerOrdersContainer').innerHTML = orders.map(o => `
+        <div class="card" style="margin-bottom:1rem;">
+          <h4>Project Order #${o.id} - ${o.category}</h4>
+          <p>Hired Editor: ${o.lister_name} (${o.lister_phone})</p>
+          <p style="color:var(--discord); font-weight:bold;">Editor Discord: ${o.lister_discord}</p>
+          <p style="font-weight:bold; color:var(--primary);">$${o.amount}</p>
+        </div>
+      `).join('');
+    }
+
+    async function loadSellerCentral() {
+      if (!currentUser || currentUser.role !== 'lister') return alert('Access restricted to Editors.');
+      const res = await fetch(`${API}/lister/dashboard`, {
+        headers: { 'Authorization': `Bearer ${currentToken}` }
+      });
+      const data = await res.json();
+
+      document.getElementById('scName').innerText = currentUser.name;
+      document.getElementById('scCity').innerText = currentUser.editing_app;
+      document.getElementById('scDiscord').innerText = currentUser.discord;
+      document.getElementById('scCategory').innerText = data.profile ? data.profile.editing_style : 'N/A';
+      document.getElementById('scRate').innerText = data.profile ? data.profile.rate : '0';
+      document.getElementById('scPic').src = data.profile ? data.profile.profile_pic : '';
+
+      document.getElementById('scOrders').innerHTML = data.orders.map(o => `
+        <div style="border-bottom:1px solid var(--border); padding:0.5rem 0;">
+          <strong>Gig Order #${o.id} - Client: ${o.customer_name}</strong>
+          <p>Phone: ${o.customer_phone}</p>
+          <p style="color:var(--discord);">Client Discord: ${o.customer_discord}</p>
+        </div>
+      `).join('');
+    }
+
+    populateCities();
+    setupDragAndDrop();
+    updateAuthNav();
+    fetchWorkers();
+  </script>
+</body>
+</html>
